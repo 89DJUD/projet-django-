@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter une indisponibilité{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">
+        <i class="fas fa-ban mr-2 text-red-500"></i>Déclarer une période d'indisponibilité
+    </h1>
+    <div class="card">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+            <div class="flex gap-3">
+                <a href="{% url 'schedules:mes_disponibilites' %}" class="btn-secondary">Annuler</a>
+                <button type="submit" class="btn-primary flex-1">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

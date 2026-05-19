@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Dr. {{ medecin.utilisateur.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="card mb-6">
+        <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-shrink-0">
+                {% if medecin.utilisateur.photo %}
+                    <img src="{{ medecin.utilisateur.photo.url }}" class="w-32 h-32 rounded-full object-cover">
+                {% else %}
+                    <div class="w-32 h-32 rounded-full bg-sky-100 flex items-center justify-center">
+                        <i class="fas fa-user-md text-sky-400 text-5xl"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-gray-800">Dr. {{ medecin.utilisateur.get_full_name }}</h1>
+                <p class="text-sky-500 font-medium mt-1">{{ medecin.specialites_liste }}</p>
+                <div class="grid grid-cols-2 gap-4 mt-4 text-sm text-gray-600">
+                    <div><i class="fas fa-briefcase mr-2 text-sky-400"></i>{{ medecin.annees_experience }} ans d'expérience</div>
+                    <div><i class="fas fa-phone mr-2 text-sky-400"></i>{{ medecin.telephone_pro }}</div>
+                    <div><i class="fas fa-map-marker-alt mr-2 text-sky-400"></i>{{ medecin.adresse_cabinet }}</div>
+                    <div><i class="fas fa-money-bill mr-2 text-sky-400"></i>{{ medecin.tarif_consultation }} DA</div>
+                </div>
+                {% if medecin.description %}
+                    <p class="text-gray-600 mt-4">{{ medecin.description }}</p>
+                {% endif %}
+                {% if user.is_authenticated and user.is_patient %}
+                    <a href="{% url 'appointments:prendre_rdv' medecin.pk %}" class="btn-primary mt-4 inline-block">
+                        <i class="fas fa-calendar-plus mr-2"></i>Prendre rendez-vous
+                    </a>
+                {% elif not user.is_authenticated %}
+                    <a href="{% url 'accounts:inscription' %}" class="btn-primary mt-4 inline-block">
+                        <i class="fas fa-user-plus mr-2"></i>S'inscrire pour réserver
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Disponibilités -->
+    <div class="card mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-clock mr-2 text-sky-500"></i>Disponibilités</h2>
+        {% if disponibilites %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for dispo in disponibilites %}
+            <div class="flex items-center justify-between bg-sky-50 rounded-lg px-4 py-3">
+                <span class="font-medium text-gray-700">{{ dispo.get_jour_display }}</span>
+                <span class="text-sky-600">{{ dispo.heure_debut|time:"H:i" }} - {{ dispo.heure_fin|time:"H:i" }}</span>
+                <span class="text-xs text-gray-500">{{ dispo.duree_rdv }}min</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">Aucune disponibilité définie pour le moment.</p>
+        {% endif %}
+    </div>
+
+    <!-- Avis -->
+    {% if avis %}
+    <div class="card">
+        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-star mr-2 text-yellow-400"></i>Avis des patients</h2>
+        {% for rdv in avis %}
+        <div class="border-b border-gray-100 py-3 last:border-0">
+            <div class="flex items-center space-x-2 mb-1">
+                {% for i in "12345" %}
+                    <i class="fas fa-star text-sm {% if forloop.counter <= rdv.avis.note %}text-yellow-400{% else %}text-gray-300{% endif %}"></i>
+                {% endfor %}
+                <span class="text-gray-500 text-sm">{{ rdv.patient.get_full_name }}</span>
+            </div>
+            {% if rdv.avis.commentaire %}
+            <p class="text-gray-600 text-sm">{{ rdv.avis.commentaire }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

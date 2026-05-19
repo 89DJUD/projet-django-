@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-br from-sky-500 to-sky-700 text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            Votre santé, <span class="text-yellow-300">notre priorité</span>
+        </h1>
+        <p class="text-xl mb-8 opacity-90">
+            Prenez rendez-vous avec les meilleurs médecins en quelques clics.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'doctors:liste' %}" class="bg-white text-sky-600 font-bold py-3 px-8 rounded-full hover:bg-sky-50 transition">
+                <i class="fas fa-search mr-2"></i>Trouver un médecin
+            </a>
+            <a href="{% url 'ai_orientation:orientation' %}" class="border-2 border-white text-white font-bold py-3 px-8 rounded-full hover:bg-white hover:text-sky-600 transition">
+                <i class="fas fa-brain mr-2"></i>Orientation IA
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="bg-white shadow-sm py-8">
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-3 gap-8 text-center">
+        <div>
+            <p class="text-3xl font-bold text-sky-500">{{ medecins.count }}+</p>
+            <p class="text-gray-500 mt-1">Médecins</p>
+        </div>
+        <div>
+            <p class="text-3xl font-bold text-sky-500">{{ specialites.count }}+</p>
+            <p class="text-gray-500 mt-1">Spécialités</p>
+        </div>
+        <div>
+            <p class="text-3xl font-bold text-sky-500">24/7</p>
+            <p class="text-gray-500 mt-1">Disponible</p>
+        </div>
+    </div>
+</section>
+
+<!-- Spécialités -->
+<section class="max-w-7xl mx-auto px-4 py-16">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Nos Spécialités</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {% for specialite in specialites %}
+        <a href="{% url 'doctors:liste' %}?specialite={{ specialite.pk }}" class="card text-center hover:border-sky-300 hover:shadow-lg transition group">
+            <i class="fas fa-stethoscope text-3xl text-sky-400 group-hover:text-sky-600 mb-2"></i>
+            <p class="text-sm font-medium text-gray-700">{{ specialite.nom }}</p>
+        </a>
+        {% endfor %}
+        <a href="{% url 'doctors:specialites' %}" class="card text-center hover:border-sky-300 hover:shadow-lg transition">
+            <i class="fas fa-plus-circle text-3xl text-gray-300 mb-2"></i>
+            <p class="text-sm font-medium text-gray-500">Voir tout</p>
+        </a>
+    </div>
+</section>
+
+<!-- Médecins vedettes -->
+<section class="bg-gray-100 py-16">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Médecins à la Une</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for medecin in medecins %}
+            <div class="card hover:shadow-xl transition">
+                <div class="flex items-center space-x-4 mb-4">
+                    {% if medecin.utilisateur.photo %}
+                        <img src="{{ medecin.utilisateur.photo.url }}" class="w-16 h-16 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-sky-100 flex items-center justify-center">
+                            <i class="fas fa-user-md text-sky-400 text-2xl"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h3 class="font-bold text-gray-800">Dr. {{ medecin.utilisateur.get_full_name }}</h3>
+                        <p class="text-sky-500 text-sm">{{ medecin.specialites_liste }}</p>
+                        <p class="text-gray-400 text-xs">{{ medecin.annees_experience }} ans d'expérience</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ medecin.description|default:"Médecin qualifié et expérimenté." }}</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-sky-600 font-semibold">{{ medecin.tarif_consultation }} DA</span>
+                    <a href="{% url 'doctors:detail' medecin.pk %}" class="btn-primary text-sm">
+                        Voir profil
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="{% url 'doctors:liste' %}" class="btn-primary">Voir tous les médecins</a>
+        </div>
+    </div>
+</section>
+
+<!-- Comment ça marche -->
+<section class="max-w-7xl mx-auto px-4 py-16">
+    <h2 class="text-3xl font-bold text-gray-800 mb-12 text-center">Comment ça marche ?</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-sky-500 font-bold text-2xl">1</span>
+            </div>
+            <h3 class="font-bold text-gray-800 mb-2">Choisissez un médecin</h3>
+            <p class="text-gray-500">Recherchez par nom ou spécialité. Utilisez notre IA pour vous orienter.</p>
+        </div>
+        <div class="text-center">
+            <div class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-sky-500 font-bold text-2xl">2</span>
+            </div>
+            <h3 class="font-bold text-gray-800 mb-2">Réservez un créneau</h3>
+            <p class="text-gray-500">Consultez les disponibilités et choisissez la date et l'heure qui vous convient.</p>
+        </div>
+        <div class="text-center">
+            <div class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-sky-500 font-bold text-2xl">3</span>
+            </div>
+            <h3 class="font-bold text-gray-800 mb-2">Consultez votre médecin</h3>
+            <p class="text-gray-500">Recevez une confirmation et suivez vos rendez-vous depuis votre tableau de bord.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

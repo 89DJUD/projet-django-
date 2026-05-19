@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Médecins{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6"><i class="fas fa-user-md mr-2 text-sky-500"></i>Nos Médecins</h1>
+
+    <!-- Search Form -->
+    <div class="card mb-8">
+        <form method="get" class="flex flex-col md:flex-row gap-4">
+            <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Rechercher un médecin..."
+                   class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <select name="specialite" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <option value="">Toutes les spécialités</option>
+                {% for s in specialites %}
+                <option value="{{ s.pk }}" {% if request.GET.specialite == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.nom }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-search mr-2"></i>Rechercher
+            </button>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for medecin in medecins %}
+        <div class="card hover:shadow-xl transition">
+            <div class="flex items-center space-x-4 mb-4">
+                {% if medecin.utilisateur.photo %}
+                    <img src="{{ medecin.utilisateur.photo.url }}" class="w-16 h-16 rounded-full object-cover">
+                {% else %}
+                    <div class="w-16 h-16 rounded-full bg-sky-100 flex items-center justify-center">
+                        <i class="fas fa-user-md text-sky-400 text-2xl"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h3 class="font-bold text-gray-800">Dr. {{ medecin.utilisateur.get_full_name }}</h3>
+                    <p class="text-sky-500 text-sm">{{ medecin.specialites_liste }}</p>
+                    <p class="text-gray-400 text-xs"><i class="fas fa-map-marker-alt mr-1"></i>{{ medecin.adresse_cabinet|truncatechars:30 }}</p>
+                </div>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ medecin.description|default:"Médecin qualifié disponible pour vos consultations." }}</p>
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-briefcase mr-1"></i>{{ medecin.annees_experience }} ans exp.
+                </div>
+                <div class="flex space-x-2">
+                    <a href="{% url 'doctors:detail' medecin.pk %}" class="btn-secondary text-sm">Profil</a>
+                    {% if user.is_authenticated and user.is_patient %}
+                        <a href="{% url 'appointments:prendre_rdv' medecin.pk %}" class="btn-primary text-sm">
+                            <i class="fas fa-calendar-plus mr-1"></i>RDV
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-3 text-center py-12 text-gray-500">
+            <i class="fas fa-search text-4xl mb-3 block text-gray-300"></i>
+            Aucun médecin trouvé pour cette recherche.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

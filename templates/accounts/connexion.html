@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full">
+        <div class="text-center mb-8">
+            <i class="fas fa-sign-in-alt text-sky-500 text-4xl mb-3"></i>
+            <h1 class="text-3xl font-bold text-gray-800">Connexion</h1>
+            <p class="text-gray-500 mt-2">Accédez à votre espace MediBook</p>
+        </div>
+        <div class="card">
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
+                    <input type="text" name="username"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" required autofocus>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                    <input type="password" name="password"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" required>
+                </div>
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">
+                        Identifiants incorrects. Veuillez réessayer.
+                    </div>
+                {% endif %}
+                <button type="submit" class="w-full btn-primary py-3 text-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Se connecter
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-500 mt-4">
+                Pas encore de compte ? <a href="{% url 'accounts:inscription' %}" class="text-sky-500 hover:underline">S'inscrire</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

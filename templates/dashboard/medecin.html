@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord Médecin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">
+        <i class="fas fa-tachometer-alt mr-2 text-sky-500"></i>Bonjour, Dr. {{ user.get_full_name }} !
+    </h1>
+
+    <!-- Statistiques -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="card text-center">
+            <p class="text-3xl font-bold text-sky-500">{{ total_rdv }}</p>
+            <p class="text-sm text-gray-500 mt-1">Total RDV</p>
+        </div>
+        <div class="card text-center">
+            <p class="text-3xl font-bold text-green-500">{{ rdv_confirmes }}</p>
+            <p class="text-sm text-gray-500 mt-1">Confirmés</p>
+        </div>
+        <div class="card text-center">
+            <p class="text-3xl font-bold text-orange-500">{{ rdv_jour|length }}</p>
+            <p class="text-sm text-gray-500 mt-1">Aujourd'hui</p>
+        </div>
+        <div class="card text-center">
+            <p class="text-3xl font-bold text-red-500">{{ rdv_annules }}</p>
+            <p class="text-sm text-gray-500 mt-1">Annulés</p>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <a href="{% url 'schedules:mes_disponibilites' %}" class="card text-center hover:border-sky-300 transition">
+            <i class="fas fa-clock text-2xl text-sky-400 mb-2 block"></i>
+            <p class="text-sm font-medium text-gray-700">Mes disponibilités</p>
+        </a>
+        <a href="{% url 'doctors_mgmt:mon_profil_medecin' %}" class="card text-center hover:border-sky-300 transition">
+            <i class="fas fa-user-md text-2xl text-teal-400 mb-2 block"></i>
+            <p class="text-sm font-medium text-gray-700">Mon profil</p>
+        </a>
+        <a href="{% url 'notifications:mes_notifications' %}" class="card text-center hover:border-sky-300 transition">
+            <i class="fas fa-bell text-2xl text-orange-400 mb-2 block"></i>
+            <p class="text-sm font-medium text-gray-700">Notifications</p>
+        </a>
+        <a href="{% url 'doctors:liste' %}" class="card text-center hover:border-sky-300 transition">
+            <i class="fas fa-home text-2xl text-gray-400 mb-2 block"></i>
+            <p class="text-sm font-medium text-gray-700">Accueil</p>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- RDV du jour -->
+        <div class="card">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">
+                <i class="fas fa-calendar-day mr-2 text-sky-400"></i>Rendez-vous d'aujourd'hui
+            </h2>
+            {% if rdv_jour %}
+                {% for rdv in rdv_jour %}
+                <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                    <div>
+                        <p class="font-medium text-gray-800">{{ rdv.patient.get_full_name }}</p>
+                        <p class="text-xs text-gray-500">{{ rdv.heure|time:"H:i" }} — {{ rdv.motif|truncatechars:40 }}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if rdv.statut == 'attente' %}
+                        <a href="{% url 'appointments:confirmer_rdv' rdv.pk %}"
+                           class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">
+                            Confirmer
+                        </a>
+                        {% endif %}
+                        {% if not rdv.consultation %}
+                        <a href="{% url 'appointments:consultation' rdv.pk %}"
+                           class="text-xs bg-sky-500 hover:bg-sky-600 text-white px-2 py-1 rounded">
+                            Compte-rendu
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-400 text-sm text-center py-4">Aucun rendez-vous aujourd'hui.</p>
+            {% endif %}
+        </div>
+
+        <!-- RDV semaine -->
+        <div class="card">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">
+                <i class="fas fa-calendar-week mr-2 text-purple-400"></i>Cette semaine
+            </h2>
+            {% if rdv_semaine %}
+                {% for rdv in rdv_semaine %}
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div>
+                        <p class="font-medium text-gray-800 text-sm">{{ rdv.patient.get_full_name }}</p>
+                        <p class="text-xs text-gray-500">{{ rdv.date }} à {{ rdv.heure|time:"H:i" }}</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full
+                        {% if rdv.statut == 'confirme' %}bg-green-100 text-green-700
+                        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                        {{ rdv.get_statut_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-400 text-sm text-center py-4">Aucun rendez-vous cette semaine.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

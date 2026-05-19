@@ -1,0 +1,131 @@
+name: MediBook CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  DOCKER_IMAGE: medibook
+
+jobs:
+  test:
+    name: Tests & Qualité du code
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: medibook_test
+          POSTGRES_USER: medibook_user
+          POSTGRES_PASSWORD: testpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Configurer Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lancer les migrations en environnement de test
+        env:
+          SECRET_KEY: test-secret-key-ci-cd
+          DEBUG: "True"
+          DB_NAME: medibook_test
+          DB_USER: medibook_user
+          DB_PASSWORD: testpassword
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: python manage.py migrate
+
+      - name: Exécuter les tests
+        env:
+          SECRET_KEY: test-secret-key-ci-cd
+          DEBUG: "True"
+          DB_NAME: medibook_test
+          DB_USER: medibook_user
+          DB_PASSWORD: testpassword
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: python manage.py test --verbosity=2
+
+      - name: Vérifier la qualité du code (flake8)
+        run: |
+          pip install flake8
+          flake8 . --count --max-line-length=120 --exclude=migrations,__pycache__,.git --statistics || true
+
+  build:
+    name: Construction de l'image Docker
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Se connecter à Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Configurer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construire et publier l'image Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security:
+    name: Scan de sécurité
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Scan des dépendances (safety)
+        run: |
+          pip install safety
+          safety check -r requirements.txt || true
+
+      - name: Vérification Django deployment checklist
+        env:
+          SECRET_KEY: test-secret-key-ci-cd
+          DEBUG: "False"
+          ALLOWED_HOSTS: localhost
+        run: |
+          pip install -r requirements.txt
+          python manage.py check --deploy || true
